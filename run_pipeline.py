@@ -812,8 +812,26 @@ def run_export(state: dict) -> dict:
     else:
         step("typeset/build_tex.py not found, skipping LaTeX")
 
-    # 6. Final commit
-    commit_hash = git_add_commit("export: manuscript, outline, arc summary, PDF")
+    # 6. Build EPUB
+    build_epub_script = BASE_DIR / "typeset" / "build_epub.py"
+    if build_epub_script.exists():
+        step("Building EPUB...")
+        novel_title = state.get("novel_title", "Untitled Novel")
+        result = run_tool(
+            [sys.executable, "typeset/build_epub.py",
+             "--title", novel_title,
+             "--author", "Generated with Hermes Autonovel"],
+            timeout=300
+        )
+        if result.returncode == 0:
+            step("EPUB generated: typeset/the_speaking_tide.epub")
+        else:
+            step("WARNING: EPUB build failed")
+    else:
+        step("typeset/build_epub.py not found, skipping EPUB")
+
+    # 7. Final commit
+    commit_hash = git_add_commit("export: manuscript, outline, arc summary, PDF, EPUB")
     total_words = count_words_in_chapters()
     log_result(commit_hash, "export", state.get("novel_score", "?"),
                total_words, "export", "Final export")
