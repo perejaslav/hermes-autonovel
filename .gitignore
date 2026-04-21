@@ -8,5 +8,9 @@ __pycache__/
 .uv-cache/
 .test-tmp/
 typeset/*.pdf
+typeset/*.aux
+typeset/*.log
+typeset/*.out
 typeset/chapters_content.tex
-*.pdf
+typeset/epub_temp/
+*.epub
