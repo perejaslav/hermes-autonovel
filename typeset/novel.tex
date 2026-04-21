@@ -1,5 +1,15 @@
 \documentclass[11pt, openany]{book}
 
+% =============================================================================
+% BOOK CONFIGURATION -- edit these values to customize the book
+% =============================================================================
+\def\NOVELTITLE{The Speaking Tide}
+\def\NOVELAUTHOR{Hermes Agent}
+\def\NOVELYEAR{2026}
+\def\NOVELURL{https://github.com/perejaslav/hermes-autonovel}
+\def\NOVELEPIGRAPH{The sea does not give warnings.\\It gives choices.}
+% =============================================================================
+
 % === GEOMETRY: Trade paperback (5.5 x 8.5 inches) ===
 \usepackage[
   paperwidth=5.5in,
@@ -29,125 +39,96 @@
 % === GRAPHICS ===
 \usepackage{graphicx}
 
-% === DROP CAPS ===
+% === DROP CAPS (lettrine) ===
 \usepackage{lettrine}
-\setcounter{DefaultLines}{2}
+\usepackage{chngcntr}
+\counterwithout{DefaultLines}{chapter}
+
+% === SCENE BREAK ORNAMENT ===
+\DeclareRobustCommand{\scenebreak}{%
+  \par\vspace{0.6\baselineskip}%
+  \noindent\hfil{\small$\cdot$ $\cdot$ $\cdot$}\hfil%
+  \par\vspace{0.6\baselineskip}%
+}
 
 % === HEADERS AND FOOTERS ===
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[LE]{\small\textsc{the second son of the house of bells}}
+\fancyhead[LE]{\small\textit{\NOVELTITLE}}
 \fancyhead[RO]{\small\textit{\leftmark}}
 \fancyfoot[C]{\thepage}
-\renewcommand{\headrulewidth}{0pt}
-
 \fancypagestyle{plain}{
   \fancyhf{}
   \fancyfoot[C]{\thepage}
-  \renewcommand{\headrulewidth}{0pt}
 }
 
 % === CHAPTER STYLE ===
 \usepackage{titlesec}
-
-% Ornamental bell motif (using dingbats)
-\newcommand{\bellornament}{%
-  \par\noindent\vspace{6pt}%
-  \hfill{\large\symbol{"2756}}\hfill\null%
-  \vspace{6pt}\par%
-}
-
-% Scene break ornament
-\newcommand{\scenebreak}{%
-  \par\vspace{0.6\baselineskip}%
-  \noindent\hfil%
-  \IfFileExists{../art/pdf/scene_break.pdf}{%
-    \includegraphics[width=1.2in]{../art/pdf/scene_break.pdf}%
-  }{%
-  \IfFileExists{../art/scene_break.png}{%
-    \includegraphics[width=1.2in]{../art/scene_break.png}%
-  }{%
-    {\small\symbol{"2022}\quad\symbol{"2022}\quad\symbol{"2022}}%
-  }}%
-  \hfil%
-  \par\vspace{0.6\baselineskip}%
-}
-
-\renewcommand{\thechapter}{\Roman{chapter}}
 \titleformat{\chapter}[display]
   {\normalfont\centering}
   {\vspace*{1.5in}\footnotesize\textsc{chapter \thechapter}}
   {4pt}
   {\Large\itshape}
   [\vspace{8pt}{\small--- $\diamond$ ---}\vspace{0.5in}]
-
 \titlespacing*{\chapter}{0pt}{0pt}{0pt}
 
-% Lowercase chapter name in header
-\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+% Chapter name in running header (lowercase)
+\makeatletter
+\DeclareRobustCommand\chaptermark[1]{%
+  \markboth{\MakeLowercase{#1}}{}}
+\makeatother
 
-% === TITLE PAGE DESIGN ===
+% === TITLE PAGE ===
 \newcommand{\makenoveltitle}{%
   \thispagestyle{empty}
   \begin{center}
-  \vspace*{2in}
-  
-  {\small\textsc{the}}\\[0.15in]
-  
-  {\Huge\textsc{Second Son}}\\[0.1in]
-  
-  {\small\textsc{of the}}\\[0.15in]
-  
-  {\Huge\textsc{House of Bells}}\\[0.4in]
-  
-  {\small------\quad$\diamond$\quad------}\\[0.5in]
-  
-  {\large\textit{A Novel}}\\[1in]
-  
-  {\Large\textsc{Author}}\\[1.5in]
-  
-  \end{center}
-  \clearpage
-}
-
-% === EPIGRAPH ===
-\newcommand{\makeepigraph}{%
-  \thispagestyle{empty}
-  \vspace*{2.5in}
-  \begin{center}
-  \begin{minipage}{3in}
-  \begin{center}
-  \itshape
-  You're not listening to the bell.\\
-  You're listening for what the bell\\
-  is trying to tell you it is.\\[12pt]
-  \end{center}
-  \end{minipage}
+    \vspace*{2in}
+    {\Huge\textsc{\NOVELTITLE}}\\[0.4in]
+    {\small--- $\diamond$ ---}\\[0.5in]
+    {\large\textit{A Novel}}\\[1in]
+    {\Large\textsc{\NOVELAUTHOR}}\\[1.5in]
   \end{center}
   \clearpage
 }
 
 % === HALF TITLE ===
-\newcommand{\makehalftitle}{%
+\makeatletter
+\NewDocumentCommand{\makehalftitle}{}{%
   \thispagestyle{empty}
   \vspace*{3in}
   \begin{center}
-  {\large\textsc{The Second Son of the House of Bells}}
+    {\large\textsc{\NOVELTITLE}}
   \end{center}
   \clearpage
 }
+\makeatother
+
+% === EPIGRAPH ===
+\makeatletter
+\NewDocumentCommand{\makeepigraph}{}{%
+  \thispagestyle{empty}
+  \vspace*{2.5in}
+  \begin{center}
+    \begin{minipage}{3in}
+      \begin{center}
+        \itshape \NOVELEPIGRAPH \\[12pt]
+      \end{center}
+    \end{minipage}
+  \end{center}
+  \clearpage
+}
+\makeatother
 
 % === PDF METADATA ===
 \usepackage{hyperref}
 \hypersetup{
-  pdftitle={The Second Son of the House of Bells},
-  pdfauthor={Author},
-  pdfsubject={Fantasy Novel},
+  pdftitle={\NOVELTITLE},
+  pdfauthor={\NOVELAUTHOR},
   hidelinks
 }
 
-% === BEGIN DOCUMENT ===
+% =============================================================================
 \begin{document}
 
 \frontmatter
@@ -161,50 +142,32 @@
   \clearpage
 }{}
 
-% Half title
 \makehalftitle
 
-% Blank verso
 \thispagestyle{empty}
-\mbox{}
+mbox{}
 \clearpage
 
-% Title page
 \makenoveltitle
 
 % Copyright / colophon
 \thispagestyle{empty}
 \vspace*{\fill}
 \begin{center}
-
-{\small This is a work of fiction}\\[4pt]
-{\small created by Hermes Agent.}\\[18pt]
-
-{\small For full reproduction code and alternate formats}\\[2pt]
-{\small (ePub, audiobook) please visit:}\\[8pt]
-
-{\small\texttt{https://nousresearch.com/bells}}\\[16pt]
-
-\IfFileExists{../art/qr_bells.png}{%
-  \includegraphics[width=1in]{../art/qr_bells.png}
-}{}
-
+  {\small This is a work of fiction.}\\[4pt]
+  {\small Created by \NOVELAUTHOR.}\\[18pt]
+  {\small Source and alternate formats:}\\[8pt]
+  {\small\texttt{\NOVELURL}}\\[16pt]
+  \IfFileExists{../art/qr.png}{\includegraphics[width=1in]{../art/qr.png}}{}
 \end{center}
 \vspace*{\fill}
-\begin{center}
-\IfFileExists{../art/pdf/nous_logo.pdf}{%
-  \includegraphics[width=0.8in]{../art/pdf/nous_logo.pdf}
-}{}
-\end{center}
-\vspace{0.3in}
 \clearpage
 
 % Epigraph
 \makeepigraph
 
-% Blank verso before main text
 \thispagestyle{empty}
-\mbox{}
+mbox{}
 \clearpage
 
 \mainmatter
@@ -214,12 +177,11 @@
 
 % === END MATTER ===
 \backmatter
-
 \thispagestyle{empty}
 \vspace*{3in}
 \begin{center}
-{\small------\quad$\diamond$\quad------}\\[0.3in]
-{\small\textit{The bells rang on.}}
+  {\small--- $\diamond$ ---}\\[0.3in]
+  {\small\textit{The tide turned.}}
 \end{center}
 
 \end{document}
