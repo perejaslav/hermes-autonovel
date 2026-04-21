@@ -1,51 +1,90 @@
-/* ePub stylesheet for The Second Son of the House of Bells */
+/* ePub stylesheet for The Speaking Tide */
 
 body {
-    font-family: "Georgia", "Palatino", serif;
-    line-height: 1.5;
-    margin: 1em;
+    font-family: Georgia, "Palatino Linotype", Palatino, serif;
+    font-size: 1em;
+    line-height: 1.6;
+    margin: 1em 1.5em;
+    text-align: justify;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+    epubs-speaking: auto;
+}
+
+/* Comfortable reading width */
+body {
+    max-width: 42em;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 h1 {
-    font-size: 1.6em;
+    font-size: 1.5em;
     text-align: center;
-    margin-top: 2em;
-    margin-bottom: 1.5em;
     font-weight: normal;
     font-style: italic;
+    margin: 2em 0 1.5em;
+    page-break-after: avoid;
 }
 
-/* Scene breaks */
+h2, h3 {
+    font-weight: normal;
+    page-break-after: avoid;
+}
+
+/* Scene breaks — centered asterism */
 hr {
     border: none;
     text-align: center;
-    margin: 1.5em 0;
+    margin: 2em 0;
 }
 
 hr::after {
-    content: "• • •";
+    content: "❧";
+    font-size: 1.2em;
     color: #555;
-    font-size: 0.9em;
-    letter-spacing: 0.5em;
 }
 
+/* Paragraphs */
 p {
     text-indent: 1.5em;
     margin: 0;
 }
 
-/* First paragraph after heading or scene break — no indent */
+/* First paragraph after heading — no indent */
 h1 + p,
-hr + p {
+h2 + p,
+h3 + p {
     text-indent: 0;
 }
 
-/* Italic for internal thoughts */
+/* Drop cap on first paragraph of each chapter */
+p:first-of-type::first-letter {
+    font-size: 3em;
+    float: left;
+    line-height: 0.8;
+    padding-right: 0.1em;
+    padding-top: 0.1em;
+    font-weight: normal;
+}
+
+/* Internal thoughts — italic */
 em {
     font-style: italic;
 }
 
+/* Dialogue — slightly indented block */
 blockquote {
+    margin: 0.5em 2em;
     font-style: italic;
-    margin: 1em 2em;
+}
+
+/* Strong emphasis */
+strong {
+    font-weight: bold;
+}
+
+/* No border-left on blockquote (conflicts with reading system styles) */
+blockquote p {
+    text-indent: 0;
 }

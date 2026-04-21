@@ -8,115 +8,115 @@
   </head>
   <docTitle><text>The Speaking Tide</text></docTitle>
   <navMap>
-      <navPoint id="navpoint-1" playOrder="1">
+      <navPoint id="navpoint-2" playOrder="2">
         <navLabel><text>Chapter 01</text></navLabel>
         <content src="text/ch_01.xhtml"/>
       </navPoint>
-      <navPoint id="navpoint-2" playOrder="2">
+      <navPoint id="navpoint-3" playOrder="3">
         <navLabel><text>Chapter 02</text></navLabel>
         <content src="text/ch_02.xhtml"/>
       </navPoint>
-      <navPoint id="navpoint-3" playOrder="3">
+      <navPoint id="navpoint-4" playOrder="4">
         <navLabel><text>Chapter 03</text></navLabel>
         <content src="text/ch_03.xhtml"/>
       </navPoint>
-      <navPoint id="navpoint-4" playOrder="4">
+      <navPoint id="navpoint-5" playOrder="5">
         <navLabel><text>Chapter 04</text></navLabel>
         <content src="text/ch_04.xhtml"/>
       </navPoint>
-      <navPoint id="navpoint-5" playOrder="5">
+      <navPoint id="navpoint-6" playOrder="6">
         <navLabel><text>Chapter 05</text></navLabel>
         <content src="text/ch_05.xhtml"/>
       </navPoint>
-      <navPoint id="navpoint-6" playOrder="6">
+      <navPoint id="navpoint-7" playOrder="7">
         <navLabel><text>Chapter 06</text></navLabel>
         <content src="text/ch_06.xhtml"/>
       </navPoint>
-      <navPoint id="navpoint-7" playOrder="7">
+      <navPoint id="navpoint-8" playOrder="8">
         <navLabel><text>Chapter 07</text></navLabel>
         <content src="text/ch_07.xhtml"/>
       </navPoint>
-      <navPoint id="navpoint-8" playOrder="8">
+      <navPoint id="navpoint-9" playOrder="9">
         <navLabel><text>Chapter 08</text></navLabel>
         <content src="text/ch_08.xhtml"/>
       </navPoint>
-      <navPoint id="navpoint-9" playOrder="9">
+      <navPoint id="navpoint-10" playOrder="10">
         <navLabel><text>Chapter 09</text></navLabel>
         <content src="text/ch_09.xhtml"/>
       </navPoint>
-      <navPoint id="navpoint-10" playOrder="10">
+      <navPoint id="navpoint-11" playOrder="11">
         <navLabel><text>Chapter 10</text></navLabel>
         <content src="text/ch_10.xhtml"/>
       </navPoint>
-      <navPoint id="navpoint-11" playOrder="11">
+      <navPoint id="navpoint-12" playOrder="12">
         <navLabel><text>Chapter 11</text></navLabel>
         <content src="text/ch_11.xhtml"/>
       </navPoint>
-      <navPoint id="navpoint-12" playOrder="12">
+      <navPoint id="navpoint-13" playOrder="13">
         <navLabel><text>Chapter 12</text></navLabel>
         <content src="text/ch_12.xhtml"/>
       </navPoint>
-      <navPoint id="navpoint-13" playOrder="13">
+      <navPoint id="navpoint-14" playOrder="14">
         <navLabel><text>Chapter 13</text></navLabel>
         <content src="text/ch_13.xhtml"/>
       </navPoint>
-      <navPoint id="navpoint-14" playOrder="14">
+      <navPoint id="navpoint-15" playOrder="15">
         <navLabel><text>Chapter 14</text></navLabel>
         <content src="text/ch_14.xhtml"/>
       </navPoint>
-      <navPoint id="navpoint-15" playOrder="15">
+      <navPoint id="navpoint-16" playOrder="16">
         <navLabel><text>Chapter 15</text></navLabel>
         <content src="text/ch_15.xhtml"/>
       </navPoint>
-      <navPoint id="navpoint-16" playOrder="16">
+      <navPoint id="navpoint-17" playOrder="17">
         <navLabel><text>Chapter 16</text></navLabel>
         <content src="text/ch_16.xhtml"/>
       </navPoint>
-      <navPoint id="navpoint-17" playOrder="17">
+      <navPoint id="navpoint-18" playOrder="18">
         <navLabel><text>Chapter 17</text></navLabel>
         <content src="text/ch_17.xhtml"/>
       </navPoint>
-      <navPoint id="navpoint-18" playOrder="18">
+      <navPoint id="navpoint-19" playOrder="19">
         <navLabel><text>Chapter 18</text></navLabel>
         <content src="text/ch_18.xhtml"/>
       </navPoint>
-      <navPoint id="navpoint-19" playOrder="19">
+      <navPoint id="navpoint-20" playOrder="20">
         <navLabel><text>Chapter 19</text></navLabel>
         <content src="text/ch_19.xhtml"/>
       </navPoint>
-      <navPoint id="navpoint-20" playOrder="20">
+      <navPoint id="navpoint-21" playOrder="21">
         <navLabel><text>Chapter 20</text></navLabel>
         <content src="text/ch_20.xhtml"/>
       </navPoint>
-      <navPoint id="navpoint-21" playOrder="21">
+      <navPoint id="navpoint-22" playOrder="22">
         <navLabel><text>Chapter 21</text></navLabel>
         <content src="text/ch_21.xhtml"/>
       </navPoint>
-      <navPoint id="navpoint-22" playOrder="22">
+      <navPoint id="navpoint-23" playOrder="23">
         <navLabel><text>Chapter 22</text></navLabel>
         <content src="text/ch_22.xhtml"/>
       </navPoint>
-      <navPoint id="navpoint-23" playOrder="23">
+      <navPoint id="navpoint-24" playOrder="24">
         <navLabel><text>Chapter 23</text></navLabel>
         <content src="text/ch_23.xhtml"/>
       </navPoint>
-      <navPoint id="navpoint-24" playOrder="24">
+      <navPoint id="navpoint-25" playOrder="25">
         <navLabel><text>Chapter 24</text></navLabel>
         <content src="text/ch_24.xhtml"/>
       </navPoint>
-      <navPoint id="navpoint-25" playOrder="25">
+      <navPoint id="navpoint-26" playOrder="26">
         <navLabel><text>Chapter 25</text></navLabel>
         <content src="text/ch_25.xhtml"/>
       </navPoint>
-      <navPoint id="navpoint-26" playOrder="26">
+      <navPoint id="navpoint-27" playOrder="27">
         <navLabel><text>Chapter 26</text></navLabel>
         <content src="text/ch_26.xhtml"/>
       </navPoint>
-      <navPoint id="navpoint-27" playOrder="27">
+      <navPoint id="navpoint-28" playOrder="28">
         <navLabel><text>Chapter 27</text></navLabel>
         <content src="text/ch_27.xhtml"/>
       </navPoint>
-      <navPoint id="navpoint-28" playOrder="28">
+      <navPoint id="navpoint-29" playOrder="29">
         <navLabel><text>Chapter 28</text></navLabel>
         <content src="text/ch_28.xhtml"/>
       </navPoint>
