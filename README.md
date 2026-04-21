@@ -26,7 +26,13 @@ uv sync
 # Generate a seed concept (or write your own in seed.txt)
 uv run python seed.py
 
-# Run the full pipeline
+# Run the pipeline phase-by-phase (recommended for VPS)
+uv run python run_pipeline.py --phase foundation
+uv run python run_pipeline.py --phase drafting
+uv run python run_pipeline.py --phase revision --max-cycles 3
+uv run python run_pipeline.py --phase export
+
+# Or run everything from scratch (resets pipeline state)
 uv run python run_pipeline.py --from-scratch
 ```
 
@@ -59,7 +65,7 @@ See [PIPELINE.md](PIPELINE.md) for the full technical specification.
 
 ---
 
-## Tools (27 Python scripts)
+## Tools (30 Python scripts)
 
 ### Foundation
 | Tool | Purpose |
@@ -108,6 +114,12 @@ See [PIPELINE.md](PIPELINE.md) for the full technical specification.
 | `gen_audiobook_script.py` | Parse chapters into speaker-attributed scripts |
 | `gen_audiobook.py` | Generate multi-voice audio via ElevenLabs |
 
+### Utilities
+| Tool | Purpose |
+|------|---------|
+| `_api_adapter.py` | API adapter for LLM providers |
+| `autonovel_utils.py` | Shared utilities across the pipeline |
+
 ### Orchestration
 | Tool | Purpose |
 |------|---------|
@@ -140,15 +152,31 @@ TEMPLATES (filled per-novel on a branch):
 TYPESETTING:
   typeset/novel.tex      — LaTeX template (EB Garamond, trade paperback)
   typeset/build_tex.py   — Chapters → LaTeX with vector ornaments
-  typeset/epub_*          — ePub metadata, CSS, and front matter
+  typeset/epub_back_cover.md — ePub back cover template
+  typeset/epub_colophon.md  — ePub colophon template
+  typeset/epub_front_matter.md — ePub front matter template
+  typeset/epub_metadata.yaml  — ePub metadata configuration
+  typeset/epub_style.css      — ePub styling
 
 ART:
   audiobook_voices.json  — Character → ElevenLabs voice mapping
   landing/index.html     — Responsive landing page template
 
+LOGS & OUTPUTS:
+  edit_logs/             — Adversarial editing analysis logs
+  eval_logs/             — Evaluation and scoring logs
+  results.tsv            — Tabular results from evaluation
+  briefs/                — Generated revision briefs (optional)
+
+HERMES AGENT:
+  hermes-agent/          — AI agent for autonomous pipeline execution
+    system-prompt.md     — System prompt for Hermes Agent
+    skills/              — Agent skills and workflows
+
 CONFIG:
-  .env.example           — API keys (MiniMax, fal.ai, ElevenLabs)
+  .env.example           — API keys and configuration (MiniMax, fal.ai, ElevenLabs)
   pyproject.toml         — Python dependencies
+  tests/                 — Test suite (smoke tests)
 ```
 
 ---
@@ -193,18 +221,57 @@ loop continues until the reviewer's items are mostly qualified hedges rather tha
 
 ---
 
+## Hermes Agent
+
+The `hermes-agent/` directory contains an autonomous AI agent that can operate
+the pipeline end-to-end. The agent executes phases sequentially, verifies outputs,
+and provides recovery guidance on failures.
+
+### Key Features
+
+- **MiniMax-only:** Enforces MiniMax as the sole LLM provider
+- **Phase-by-phase execution:** Safe for small VPS machines (2 GB RAM)
+- **Verification after each step:** Checks outputs before proceeding
+- **Recovery rules:** Specific guidance for common failures
+- **VPS-safe defaults:** Optional heavy outputs (art, audiobook, deep review) disabled by default
+
+### Usage
+
+The agent is designed for use with AI agent systems that support skill-based workflows.
+See `hermes-agent/skills/autonovel-minimax-pipeline/SKILL.md` for the complete agent protocol.
+
+### Safe Command Order (VPS)
+
+```bash
+uv sync --frozen
+uv run python run_pipeline.py --phase foundation
+uv run python run_pipeline.py --phase drafting
+uv run python run_pipeline.py --phase revision --max-cycles 3
+uv run python run_pipeline.py --phase export
+```
+
+The agent avoids `--from-scratch` unless explicitly requested, as it resets pipeline state.
+
+---
+
 ## API Keys
 
-The pipeline uses three external services:
+The pipeline uses three external services and several configuration options:
 
 | Service | Key | Used for |
 |---------|-----|----------|
-| MiniMax | `MINIMAX_API_KEY` | Writing, evaluation, review |
-| fal.ai | `FAL_KEY` | Cover art and ornament generation (Nano Banana 2) |
-| ElevenLabs | `ELEVENLABS_API_KEY` | Multi-voice audiobook generation |
+| MiniMax | `MINIMAX_API_KEY` | Writing, evaluation, review (required) |
+| MiniMax | `MINIMAX_API_BASE_URL` | API base URL (defaults to `https://api.minimax.io/anthropic`) |
+| fal.ai | `FAL_KEY` | Cover art and ornament generation (Nano Banana 2, optional) |
+| ElevenLabs | `ELEVENLABS_API_KEY` | Multi-voice audiobook generation (optional) |
+| Config | `AUTONOVEL_WRITER_MODEL` | Writer model name (defaults to `auto`) |
+| Config | `AUTONOVEL_JUDGE_MODEL` | Judge model name (defaults to `auto`, should differ from writer) |
+| Config | `AUTONOVEL_REVIEW_MODEL` | Review model name for deep analysis (defaults to `auto`) |
+| Config | `AUTONOVEL_TITLE` | Novel title for export scripts |
+| Config | `AUTONOVEL_AUTHOR` | Author name for export scripts |
 
-Copy `.env.example` to `.env` and fill in your keys. Only the MiniMax
-key is required for the core pipeline. Art and audiobook are optional.
+Copy `.env.example` to `.env` and fill in your keys. Only `MINIMAX_API_KEY`
+is required for the core pipeline. Art, audiobook, and deep review are optional.
 
 ---
 
