@@ -1,0 +1,87 @@
+#!/usr/bin/env python3
+"""
+Revision chapter generator. Rewrites a chapter from a specific revision brief.
+Usage: python gen_revision.py <chapter_num> <brief_file>
+"""
+import os
+import sys
+from pathlib import Path
+from dotenv import load_dotenv
+from autonovel_utils import project_title
+
+BASE_DIR = Path(__file__).parent
+load_dotenv(BASE_DIR / ".env")
+
+WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "auto")
+
+def call_writer(prompt, max_tokens=16000):
+    from _api_adapter import call_writer as _orig
+    return _orig(prompt, max_tokens=max_tokens)
+
+def main():
+    ch_num = int(sys.argv[1])
+    brief_file = sys.argv[2]
+    
+    voice = (BASE_DIR / "voice.md").read_text()
+    characters = (BASE_DIR / "characters.md").read_text()
+    world = (BASE_DIR / "world.md").read_text()
+    brief = Path(brief_file).read_text()
+    
+    # Load adjacent chapters for continuity
+    prev_path = BASE_DIR / "chapters" / f"ch_{ch_num - 1:02d}.md"
+    next_path = BASE_DIR / "chapters" / f"ch_{ch_num + 1:02d}.md"
+    prev_tail = prev_path.read_text()[-2000:] if prev_path.exists() else "(first chapter)"
+    next_head = next_path.read_text()[:1500] if next_path.exists() else "(last chapter)"
+    
+    # Load old version if exists
+    old_path = BASE_DIR / "chapters" / f"ch_{ch_num:02d}.md"
+    old_text = old_path.read_text() if old_path.exists() else "(no existing draft)"
+    
+    title = project_title(BASE_DIR)
+    prompt = f"""Rewrite Chapter {ch_num} of "{title}."
+
+REVISION BRIEF (follow this exactly):
+{brief}
+
+VOICE DEFINITION:
+{voice}
+
+CHARACTER REGISTRY:
+{characters}
+
+WORLD BIBLE:
+{world}
+
+PREVIOUS CHAPTER ENDING (maintain continuity):
+{prev_tail}
+
+NEXT CHAPTER OPENING (end so this flows into it):
+{next_head}
+
+THE EXISTING DRAFT (use as raw material -- keep what works, cut what doesn't):
+{old_text}
+
+ANTI-PATTERN RULES:
+- NO triadic sensory lists (X. Y. Z.)
+- NO "He did not [verb]" more than once
+- NO "He thought about [X]" constructions
+- NO "the way [X] did [Y]" more than twice
+- NO "not X, but Y" formula in narration
+- NO over-explaining after showing
+- MAX 2 section breaks
+- At least one moment that genuinely surprises
+- 70%+ in-scene (dialogue and action, not summary)
+- Dialogue should sound like speech, not prose
+
+Write the FULL revised chapter now."""
+
+    print(f"Rewriting Chapter {ch_num}...", file=sys.stderr)
+    result = call_writer(prompt)
+    
+    out_path = BASE_DIR / "chapters" / f"ch_{ch_num:02d}.md"
+    out_path.write_text(result)
+    print(f"Saved to {out_path}", file=sys.stderr)
+    print(f"Word count: {len(result.split())}", file=sys.stderr)
+
+if __name__ == "__main__":
+    main()
