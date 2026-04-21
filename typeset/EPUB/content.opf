@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="uid">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <dc:title>The Speaking Tide</dc:title>
+    <dc:creator>Generated with Hermes Autonovel</dc:creator>
+    <dc:language>en</dc:language>
+    <dc:identifier id="uid">nov-001</dc:identifier>
+    <meta property="dcterms:modified">2026-04-21T00:00:00Z</meta>
+  </metadata>
+  <manifest>
+    <item id="front_matter" href="text/front_matter.xhtml" media-type="application/xhtml+xml"/>
+    <item id="ch_01" href="text/ch_01.xhtml" media-type="application/xhtml+xml"/>
+    <item id="ch_02" href="text/ch_02.xhtml" media-type="application/xhtml+xml"/>
+    <item id="ch_03" href="text/ch_03.xhtml" media-type="application/xhtml+xml"/>
+    <item id="ch_04" href="text/ch_04.xhtml" media-type="application/xhtml+xml"/>
+    <item id="ch_05" href="text/ch_05.xhtml" media-type="application/xhtml+xml"/>
+    <item id="ch_06" href="text/ch_06.xhtml" media-type="application/xhtml+xml"/>
+    <item id="ch_07" href="text/ch_07.xhtml" media-type="application/xhtml+xml"/>
+    <item id="ch_08" href="text/ch_08.xhtml" media-type="application/xhtml+xml"/>
+    <item id="ch_09" href="text/ch_09.xhtml" media-type="application/xhtml+xml"/>
+    <item id="ch_10" href="text/ch_10.xhtml" media-type="application/xhtml+xml"/>
+    <item id="ch_11" href="text/ch_11.xhtml" media-type="application/xhtml+xml"/>
+    <item id="ch_12" href="text/ch_12.xhtml" media-type="application/xhtml+xml"/>
+    <item id="ch_13" href="text/ch_13.xhtml" media-type="application/xhtml+xml"/>
+    <item id="ch_14" href="text/ch_14.xhtml" media-type="application/xhtml+xml"/>
+    <item id="ch_15" href="text/ch_15.xhtml" media-type="application/xhtml+xml"/>
+    <item id="ch_16" href="text/ch_16.xhtml" media-type="application/xhtml+xml"/>
+    <item id="ch_17" href="text/ch_17.xhtml" media-type="application/xhtml+xml"/>
+    <item id="ch_18" href="text/ch_18.xhtml" media-type="application/xhtml+xml"/>
+    <item id="ch_19" href="text/ch_19.xhtml" media-type="application/xhtml+xml"/>
+    <item id="ch_20" href="text/ch_20.xhtml" media-type="application/xhtml+xml"/>
+    <item id="ch_21" href="text/ch_21.xhtml" media-type="application/xhtml+xml"/>
+    <item id="ch_22" href="text/ch_22.xhtml" media-type="application/xhtml+xml"/>
+    <item id="ch_23" href="text/ch_23.xhtml" media-type="application/xhtml+xml"/>
+    <item id="ch_24" href="text/ch_24.xhtml" media-type="application/xhtml+xml"/>
+    <item id="ch_25" href="text/ch_25.xhtml" media-type="application/xhtml+xml"/>
+    <item id="ch_26" href="text/ch_26.xhtml" media-type="application/xhtml+xml"/>
+    <item id="ch_27" href="text/ch_27.xhtml" media-type="application/xhtml+xml"/>
+    <item id="ch_28" href="text/ch_28.xhtml" media-type="application/xhtml+xml"/>
+    <item id="back_cover" href="text/back_cover.xhtml" media-type="application/xhtml+xml"/>
+    <item id="colophon" href="text/colophon.xhtml" media-type="application/xhtml+xml"/>
+    <item id="css" href="styles/epub_style.css" media-type="text/css"/>
+    <item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>
+    <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
+  </manifest>
+  <spine toc="ncx">
+      <itemref idref="front_matter"/>
+      <itemref idref="ch_01"/>
+      <itemref idref="ch_02"/>
+      <itemref idref="ch_03"/>
+      <itemref idref="ch_04"/>
+      <itemref idref="ch_05"/>
+      <itemref idref="ch_06"/>
+      <itemref idref="ch_07"/>
+      <itemref idref="ch_08"/>
+      <itemref idref="ch_09"/>
+      <itemref idref="ch_10"/>
+      <itemref idref="ch_11"/>
+      <itemref idref="ch_12"/>
+      <itemref idref="ch_13"/>
+      <itemref idref="ch_14"/>
+      <itemref idref="ch_15"/>
+      <itemref idref="ch_16"/>
+      <itemref idref="ch_17"/>
+      <itemref idref="ch_18"/>
+      <itemref idref="ch_19"/>
+      <itemref idref="ch_20"/>
+      <itemref idref="ch_21"/>
+      <itemref idref="ch_22"/>
+      <itemref idref="ch_23"/>
+      <itemref idref="ch_24"/>
+      <itemref idref="ch_25"/>
+      <itemref idref="ch_26"/>
+      <itemref idref="ch_27"/>
+      <itemref idref="ch_28"/>
+      <itemref idref="back_cover"/>
+      <itemref idref="colophon"/>
+  </spine>
+</package>
