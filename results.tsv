@@ -1,3 +1,4 @@
 timestamp	phase	score	words	keep_discard	description
 ebc43a3	ch01	7.0	2445	keep	Chapter 1 (attempt 1)
 discarded	ch02	5.1	3220	discard	Chapter 2 attempt 1
+cfee8e9	ch02	6.1	2695	keep	Chapter 2 (attempt 2)
