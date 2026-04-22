@@ -6,7 +6,7 @@ import os
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
-from autonovel_utils import BASE_DIR, MissingInputError, read_optional_file, read_required_file, write_generated_file
+from autonovel_utils import BASE_DIR, MissingInputError, language_instruction, read_optional_file, read_required_file, write_generated_file
 
 load_dotenv(BASE_DIR / ".env")
 
@@ -19,6 +19,9 @@ def call_writer(prompt, max_tokens=16000):
 
 def build_prompt(world: str, characters: str, outline: str, existing_canon: str) -> str:
     return f"""Build a canon database from the planning documents.
+
+LANGUAGE CONTRACT:
+{language_instruction()}
 
 WORLD BIBLE:
 {world}

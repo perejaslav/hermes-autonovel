@@ -13,9 +13,8 @@ BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env", override=True)
 
 WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "auto")
-MINIMAX_KEY = os.environ.get("MINIMAX_API_KEY", "")
 
-def call_minimax(prompt, max_tokens=16000):
+def call_writer_model(prompt, max_tokens=16000):
     from _api_adapter import call_writer as _orig
     return _orig(prompt, max_tokens=max_tokens)
 
@@ -113,7 +112,7 @@ JSON array only."""
     else:
         raise ValueError(f"Unknown art type: {art_type}")
 
-    result = call_minimax(task)
+    result = call_writer_model(task)
     text = result.strip()
     if text.startswith("```"):
         text = re.sub(r'^```\w*\n?', '', text)

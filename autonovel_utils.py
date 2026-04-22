@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from pathlib import Path
 from typing import Any
@@ -110,3 +111,36 @@ def project_title(root: Path = BASE_DIR) -> str:
         if title:
             return title
     return "Untitled Novel"
+
+
+def configured_language() -> str:
+    """Return the configured book-facing language code."""
+    return os.environ.get("AUTONOVEL_LANGUAGE", "ru").strip().lower() or "ru"
+
+
+def language_name(language: str | None = None) -> str:
+    """Return a human-readable language name for prompt instructions."""
+    language = (language or configured_language()).lower()
+    names = {
+        "ru": "Russian",
+        "russian": "Russian",
+        "en": "English",
+        "english": "English",
+    }
+    return names.get(language, language)
+
+
+def language_instruction(language: str | None = None) -> str:
+    """
+    Prompt contract for book-facing generation.
+
+    Story prose, planning documents, and editorial commentary should use the
+    configured language. Technical identifiers stay stable so scripts can parse
+    JSON and filenames consistently.
+    """
+    name = language_name(language)
+    return (
+        f"Write all book-facing content in {name}. "
+        "Keep JSON keys, filenames, command names, environment variable names, "
+        "and other technical identifiers exactly as specified."
+    )

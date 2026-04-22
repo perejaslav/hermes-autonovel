@@ -11,15 +11,18 @@ For the full technical pipeline specification, see [PIPELINE.md](PIPELINE.md).
 ```bash
 # 1. Setup
 cd ~/autonovel
-cp .env.example .env   # Add your MiniMax API key
+cp .env.example .env   # Defaults to AUTONOVEL_PROVIDER=agent
 
-# 2. Generate a seed concept (or write your own in seed.txt)
+# 2. Run the interactive foundation wizard
+uv run python foundation_wizard.py
+
+# 3. Generate a seed concept (or write your own in seed.txt)
 uv run python seed.py
 
-# 3. Create a branch for your novel
+# 4. Create a branch for your novel
 git checkout -b autonovel/my-novel
 
-# 4. Run the full pipeline
+# 5. Run the full pipeline
 uv run python run_pipeline.py --from-scratch
 ```
 
@@ -36,6 +39,9 @@ The pipeline will:
 ```bash
 # Foundation only
 uv run python run_pipeline.py --phase foundation
+
+# Foundation with interactive setup first
+uv run python run_pipeline.py --phase foundation --interactive
 
 # Drafting only
 uv run python run_pipeline.py --phase drafting
@@ -63,9 +69,10 @@ uv run python evaluate.py --full                # Score the whole novel
 uv run python adversarial_edit.py all           # Find cuts in all chapters
 uv run python apply_cuts.py all --types OVER-EXPLAIN REDUNDANT
 uv run python reader_panel.py                   # 4-persona evaluation
-uv run python review.py                         # MiniMax dual-persona review
+uv run python review.py                         # Dual-persona model review
 uv run python gen_brief.py --auto               # Auto-generate revision brief
 uv run python gen_revision.py 5 briefs/ch05.md  # Rewrite chapter from brief
+uv run python audit_project.py                  # Non-mutating state/manuscript audit
 ```
 
 ### Art (requires FAL_KEY)
@@ -107,7 +114,7 @@ OUTER LOOP (you, when you check in):
   → let the agent run again
 
 REVIEW LOOP (after automated revision):
-  send to MiniMax → parse review → fix top items → repeat
+  send to review model → parse review → fix top items → repeat
   → stop when no major unqualified items remain
 ```
 

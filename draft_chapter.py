@@ -8,7 +8,7 @@ import re
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
-from autonovel_utils import project_title
+from autonovel_utils import language_instruction, project_title
 
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env")
@@ -64,6 +64,9 @@ def main():
     
     title = project_title(BASE_DIR)
     prompt = f"""Write Chapter {chapter_num} of "{title}."
+
+LANGUAGE CONTRACT:
+{language_instruction()}
 
 VOICE DEFINITION (follow this exactly):
 {voice}

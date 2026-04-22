@@ -10,16 +10,15 @@ import os
 import sys
 import json
 import re
-import httpx
 from pathlib import Path
 from datetime import datetime
 from dotenv import load_dotenv
+from autonovel_utils import language_instruction
 
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env")
 
 JUDGE_MODEL = os.environ.get("AUTONOVEL_JUDGE_MODEL", "auto")
-API_KEY = os.environ.get("MINIMAX_API_KEY", "")
 
 READERS = {
     "editor": {
@@ -76,7 +75,10 @@ READERS = {
     },
 }
 
-READER_PROMPT = """You have just read a complete fantasy novel in summary form.
+READER_PROMPT = """LANGUAGE CONTRACT:
+{language_contract}
+
+You have just read a complete fantasy novel in summary form.
 The summaries include chapter-by-chapter events, opening and closing passages
 from each chapter, and key dialogue.
 
@@ -110,18 +112,19 @@ Respond with JSON:
 """
 
 def call_reader(reader_key, arc_summary):
-    from _api_adapter import _headers, BASE_URL, JUDGE_MODEL
+    from _api_adapter import call_model
     reader = READERS[reader_key]
-    payload = {
-        "model": JUDGE_MODEL,
-        "max_tokens": 4000,
-        "temperature": 0.7,
-        "system": reader["system"],
-        "messages": [{"role": "user", "content": READER_PROMPT.format(arc_summary=arc_summary)}],
-    }
-    resp = httpx.post(f"{BASE_URL}/v1/messages", headers=_headers(), json=payload, timeout=300)
-    resp.raise_for_status()
-    raw = resp.json()["content"][0]["text"]
+    raw = call_model(
+        READER_PROMPT.format(
+            arc_summary=arc_summary,
+            language_contract=language_instruction(),
+        ),
+        system=reader["system"],
+        model=JUDGE_MODEL,
+        max_tokens=4000,
+        temperature=0.7,
+        role="judge",
+    )
     
     # Parse JSON
     raw = raw.strip()
@@ -233,6 +236,7 @@ def main():
         "disagreements": disagreements,
         "timestamp": datetime.now().isoformat()
     }
+    (BASE_DIR / "edit_logs").mkdir(exist_ok=True)
     out_path = BASE_DIR / "edit_logs" / "reader_panel.json"
     with open(out_path, "w") as f:
         json.dump(output, f, indent=2)

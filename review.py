@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Deep manuscript review via MiniMax.
+Deep manuscript review via the configured review model.
 
-Sends the full novel to MiniMax for dual-persona review:
+Sends the full novel to the configured review model for dual-persona review:
   1. Literary critic (newspaper book review style)
   2. Professor of fiction (specific, actionable craft suggestions)
 
@@ -19,18 +19,20 @@ import argparse
 from pathlib import Path
 from datetime import datetime
 from dotenv import load_dotenv
+from autonovel_utils import language_instruction
 
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env", override=True)
 
-# Use a MiniMax review-capable model.
 REVIEW_MODEL = os.environ.get("AUTONOVEL_REVIEW_MODEL", "auto")
-API_KEY = os.environ.get("MINIMAX_API_KEY", "")
 
 CHAPTERS_DIR = BASE_DIR / "chapters"
 LOGS_DIR = BASE_DIR / "edit_logs"
 
-REVIEW_PROMPT = """Read the below novel, "{title}". Review it first as a literary critic (like a newspaper book review) and then as a professor of fiction. In the later review, give specific, actionable suggestions for any defects you find. Be fair but honest. You don't *have* to find defects.
+REVIEW_PROMPT = """LANGUAGE CONTRACT:
+{language_contract}
+
+Read the below novel, "{title}". Review it first as a literary critic (like a newspaper book review) and then as a professor of fiction. In the later review, give specific, actionable suggestions for any defects you find. Be fair but honest. You don't *have* to find defects.
 
 {manuscript}"""
 
@@ -184,7 +186,11 @@ def cmd_review(args):
     title = get_title()
     manuscript = build_manuscript()
     
-    prompt = REVIEW_PROMPT.format(title=title, manuscript=manuscript)
+    prompt = REVIEW_PROMPT.format(
+        title=title,
+        manuscript=manuscript,
+        language_contract=language_instruction(),
+    )
     
     review_text = call_review_model(prompt)
     
@@ -245,15 +251,11 @@ def cmd_parse(args):
     print(f"{'='*50}")
 
 def main():
-    parser = argparse.ArgumentParser(description="Deep manuscript review via MiniMax")
+    parser = argparse.ArgumentParser(description="Deep manuscript review")
     parser.add_argument("--output", "-o", default=None, help="Save human-readable review to file")
     parser.add_argument("--parse", action="store_true", help="Parse most recent review")
     
     args = parser.parse_args()
-    
-    if not API_KEY:
-        print("ERROR: MINIMAX_API_KEY not set in .env", file=sys.stderr)
-        sys.exit(1)
     
     if args.parse:
         cmd_parse(args)

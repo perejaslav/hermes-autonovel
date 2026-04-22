@@ -4,7 +4,7 @@ import os
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
-from autonovel_utils import BASE_DIR, MissingInputError, read_optional_file, read_required_file, write_generated_file
+from autonovel_utils import BASE_DIR, MissingInputError, language_instruction, read_optional_file, read_required_file, write_generated_file
 
 load_dotenv(BASE_DIR / ".env")
 
@@ -17,6 +17,9 @@ def call_writer(prompt, max_tokens=16000):
 
 def build_prompt(seed: str, world: str, characters: str, mystery: str, craft: str) -> str:
     return f"""Create the main chapter outline for this novel.
+
+LANGUAGE CONTRACT:
+{language_instruction()}
 
 SEED:
 {seed}

@@ -23,7 +23,8 @@ cp .env.example .env    # Add your API keys
 # Install dependencies
 uv sync
 
-# Generate a seed concept (or write your own in seed.txt)
+# Run the interactive foundation wizard, then generate a seed concept if needed
+uv run python foundation_wizard.py
 uv run python seed.py
 
 # Run the pipeline phase-by-phase (recommended for VPS)
@@ -53,7 +54,7 @@ Adversarial editing → apply cuts → reader panel → generate briefs →
 rewrite chapters. Plateau detection stops the loop when scores stabilize.
 
 ### Phase 3b: Deep Review Loop
-Send the full manuscript to MiniMax for dual-persona review
+Send the full manuscript to the configured review model for dual-persona review
 (literary critic + professor of fiction). Parse actionable items.
 Fix the top issues. Repeat until the reviewer runs out of major items.
 
@@ -91,7 +92,7 @@ See [PIPELINE.md](PIPELINE.md) for the full technical specification.
 | `adversarial_edit.py` | "Cut 500 words" analysis → classified cuts |
 | `compare_chapters.py` | Head-to-head Elo tournament |
 | `reader_panel.py` | 4-persona novel-level evaluation |
-| `review.py` | MiniMax dual-persona review with stopping conditions |
+| `review.py` | Dual-persona review with stopping conditions |
 
 ### Revision
 | Tool | Purpose |
@@ -174,7 +175,7 @@ HERMES AGENT:
     skills/              — Agent skills and workflows
 
 CONFIG:
-  .env.example           — API keys and configuration (MiniMax, fal.ai, ElevenLabs)
+  .env.example           — API keys and configuration (model API fallback, fal.ai, ElevenLabs)
   pyproject.toml         — Python dependencies
   tests/                 — Test suite (smoke tests)
 ```
@@ -208,7 +209,7 @@ downstream). The pipeline tracks propagation debts in `state.json`.
 
 ### The Deep Review Loop
 
-After automated revision cycles, the full manuscript goes to MiniMax
+After automated revision cycles, the full manuscript goes to the configured review model
 with this prompt:
 
 > "Read the below novel. Review it first as a literary critic and then
@@ -229,7 +230,9 @@ and provides recovery guidance on failures.
 
 ### Key Features
 
-- **MiniMax-only:** Enforces MiniMax as the sole LLM provider
+- **Hermes-native model path:** Uses `AUTONOVEL_PROVIDER=agent` so Hermes Agent can answer prompts with its currently selected model
+- **Russian by default:** Book-facing content defaults to Russian while technical JSON keys and filenames remain stable
+- **Interactive foundation:** `foundation_wizard.py` records early creative decisions before autonomous drafting
 - **Phase-by-phase execution:** Safe for small VPS machines (2 GB RAM)
 - **Verification after each step:** Checks outputs before proceeding
 - **Recovery rules:** Specific guidance for common failures
@@ -238,12 +241,13 @@ and provides recovery guidance on failures.
 ### Usage
 
 The agent is designed for use with AI agent systems that support skill-based workflows.
-See `hermes-agent/skills/autonovel-minimax-pipeline/SKILL.md` for the complete agent protocol.
+See `hermes-agent/skills/autonovel-hermes-pipeline/SKILL.md` for the complete agent protocol.
 
 ### Safe Command Order (VPS)
 
 ```bash
 uv sync --frozen
+uv run python foundation_wizard.py
 uv run python run_pipeline.py --phase foundation
 uv run python run_pipeline.py --phase drafting
 uv run python run_pipeline.py --phase revision --max-cycles 3
@@ -251,6 +255,12 @@ uv run python run_pipeline.py --phase export
 ```
 
 The agent avoids `--from-scratch` unless explicitly requested, as it resets pipeline state.
+
+When `AUTONOVEL_PROVIDER=agent`, model calls create request files under
+`.autonovel/agent_requests/`. Hermes Agent should answer the newest request
+with its current model, write `{"content": "..."}` to the requested response
+path, then rerun the failed command with `AUTONOVEL_AGENT_RESPONSE_FILE` set to
+that response file.
 
 ---
 
@@ -260,8 +270,13 @@ The pipeline uses three external services and several configuration options:
 
 | Service | Key | Used for |
 |---------|-----|----------|
-| MiniMax | `MINIMAX_API_KEY` | Writing, evaluation, review (required) |
-| MiniMax | `MINIMAX_API_BASE_URL` | API base URL (defaults to `https://api.minimax.io/anthropic`) |
+| Hermes Agent | `AUTONOVEL_PROVIDER=agent` | Default writer/evaluator bridge through the current Hermes model |
+| Config | `AUTONOVEL_LANGUAGE=ru` | Default book-facing language |
+| Config | `AUTONOVEL_AGENT_REQUEST_DIR` | Request file directory for agent mode |
+| GLM/Z.AI | `GLM_API_KEY` | Fallback when using `AUTONOVEL_PROVIDER=glm` |
+| OpenAI-compatible | `MODEL_API_KEY` | Fallback when using `AUTONOVEL_PROVIDER=openai_compatible` |
+| OpenAI-compatible | `MODEL_API_BASE_URL` | Generic model API base URL |
+| OpenAI-compatible | `MODEL_API_HEADERS` | Optional JSON object of extra request headers |
 | fal.ai | `FAL_KEY` | Cover art and ornament generation (Nano Banana 2, optional) |
 | ElevenLabs | `ELEVENLABS_API_KEY` | Multi-voice audiobook generation (optional) |
 | Config | `AUTONOVEL_WRITER_MODEL` | Writer model name (defaults to `auto`) |
@@ -270,8 +285,10 @@ The pipeline uses three external services and several configuration options:
 | Config | `AUTONOVEL_TITLE` | Novel title for export scripts |
 | Config | `AUTONOVEL_AUTHOR` | Author name for export scripts |
 
-Copy `.env.example` to `.env` and fill in your keys. Only `MINIMAX_API_KEY`
-is required for the core pipeline. Art, audiobook, and deep review are optional.
+Copy `.env.example` to `.env`. No API key is required for the Hermes-native
+`agent` provider, but each model call must be answered through the
+request/response file bridge. API keys are required only for fallback providers
+or optional art/audiobook services.
 
 ---
 

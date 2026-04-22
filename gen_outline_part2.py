@@ -4,7 +4,7 @@ import os
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
-from autonovel_utils import BASE_DIR, MissingInputError, read_required_file, write_generated_file
+from autonovel_utils import BASE_DIR, MissingInputError, language_instruction, read_required_file, write_generated_file
 
 load_dotenv(BASE_DIR / ".env")
 
@@ -17,6 +17,9 @@ def call_writer(prompt, max_tokens=16000):
 
 def build_prompt(outline: str, characters: str, world: str) -> str:
     return f"""Improve this outline by adding or repairing its foreshadowing ledger.
+
+LANGUAGE CONTRACT:
+{language_instruction()}
 
 WORLD BIBLE:
 {world}

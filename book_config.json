@@ -1,0 +1,15 @@
+{
+  "language": "ru",
+  "language_name": "Russian",
+  "interactive_foundation": true,
+  "foundation": {
+    "premise_hint": "",
+    "audience": "adult literary fantasy readers",
+    "tone": "specific, sensory, emotionally restrained",
+    "genre": "fantasy",
+    "selected_seed": "",
+    "world_direction": "",
+    "character_direction": "",
+    "outline_direction": ""
+  }
+}

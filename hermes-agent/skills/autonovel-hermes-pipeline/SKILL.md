@@ -1,13 +1,13 @@
 ---
-name: autonovel-minimax-pipeline
-description: Use when operating, debugging, or extending the autonovel project with Hermes Agent, especially running MiniMax-powered foundation, drafting, revision, export, or VPS-safe pipeline steps.
+name: autonovel-hermes-pipeline
+description: Use when operating, debugging, or extending the autonovel project with Hermes Agent, especially running Hermes-native foundation, drafting, revision, export, or VPS-safe pipeline steps.
 ---
 
-# Autonovel MiniMax Pipeline
+# Autonovel Hermes Pipeline
 
 ## Core Principle
 
-Advance the novel pipeline one verified step at a time. Use MiniMax-only configuration, keep optional heavy outputs disabled by default, and stop on the first concrete failure.
+Advance the novel pipeline one verified step at a time. Prefer Hermes Agent's current selected model via `AUTONOVEL_PROVIDER=agent`, keep optional heavy outputs disabled by default, and stop on the first concrete failure.
 
 ## Required Checks
 
@@ -15,14 +15,15 @@ Before running generation or evaluation:
 
 1. Verify the current directory is the `autonovel` repo.
 2. Read `.env`, `state.json`, `seed.txt`, and `README.md` or `WORKFLOW.md` as needed.
-3. Confirm `.env` contains:
+3. Confirm `.env` contains for Hermes-native runs:
 
 ```bash
-MINIMAX_API_KEY=<set>
-MINIMAX_API_BASE_URL=https://api.minimax.io/anthropic
+AUTONOVEL_PROVIDER=agent
+AUTONOVEL_LANGUAGE=ru
+AUTONOVEL_AGENT_REQUEST_DIR=.autonovel/agent_requests
 ```
 
-Do not introduce non-MiniMax provider env vars, base URLs, or model defaults.
+Do not hard-code model names in scripts. API providers are fallback modes only.
 
 ## Safe Command Order
 
@@ -30,6 +31,7 @@ Use this order on a small VPS:
 
 ```bash
 uv sync --frozen
+uv run python foundation_wizard.py
 uv run python run_pipeline.py --phase foundation
 uv run python run_pipeline.py --phase drafting
 uv run python run_pipeline.py --phase revision --max-cycles 3
@@ -89,7 +91,9 @@ If a command fails:
 Common fixes:
 
 - Missing `seed.txt`: create or ask for a seed concept.
-- Foundation generator creates empty output: inspect MiniMax key/base URL and rerun that generator.
+- Missing `book_config.json`: run `uv run python foundation_wizard.py`.
+- In `AUTONOVEL_PROVIDER=agent` mode, a model call creates `.autonovel/agent_requests/*.request.json` and stops. Answer that request with the current Hermes model, write JSON `{"content": "..."}` to the requested response path, then rerun with `AUTONOVEL_AGENT_RESPONSE_FILE=<response path>`.
+- Foundation generator creates empty output: inspect provider configuration and rerun that generator.
 - `reader_panel.py` fails: run `uv run python build_arc_summary.py` first.
 - Export PDF fails: skip PDF unless `tectonic` is installed; keep text export.
 
