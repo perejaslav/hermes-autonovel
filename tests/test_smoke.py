@@ -193,6 +193,153 @@ class UtilityTests(unittest.TestCase):
         self.assertEqual(loaded["language"], "ru")
         self.assertEqual(loaded["foundation"]["premise_hint"], "")
 
+    def test_foundation_wizard_can_save_chat_led_answers(self):
+        install_adapter_stubs()
+
+        from foundation_wizard import apply_foundation_answers, default_config, load_config
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "book_config.json"
+            config = apply_foundation_answers(
+                {
+                    "premise_hint": "роман о забытом городе",
+                    "genre": "мистический роман",
+                    "tone": "тихий, тревожный",
+                    "selected_seed": "архивариус ищет пропавшую площадь",
+                    "world_direction": "современный город с невозможной географией",
+                    "character_direction": "герой сомневается в собственной памяти",
+                    "outline_direction": "от личной тайны к выбору судьбы города",
+                },
+                base_config=default_config(),
+                path=path,
+            )
+            loaded = load_config(path)
+
+        self.assertFalse(config["interactive_foundation"])
+        self.assertEqual(loaded["language"], "ru")
+        self.assertFalse(loaded["interactive_foundation"])
+        self.assertEqual(loaded["foundation"]["premise_hint"], "роман о забытом городе")
+        self.assertEqual(loaded["foundation"]["genre"], "мистический роман")
+        self.assertEqual(loaded["foundation"]["selected_seed"], "архивариус ищет пропавшую площадь")
+
+    def test_chat_led_book_start_skill_describes_intent_workflow(self):
+        root = Path(__file__).resolve().parents[1]
+        skill = root / "hermes-agent" / "skills" / "autonovel-book-start" / "SKILL.md"
+
+        text = skill.read_text(encoding="utf-8")
+
+        self.assertIn("name: autonovel-book-start", text)
+        self.assertIn("хочу написать книгу", text)
+        self.assertIn("start_book.py", text)
+        self.assertIn("--archive-existing", text)
+        self.assertIn("book_config.json", text)
+        self.assertIn("seed.txt", text)
+        self.assertIn("wait for explicit approval", text)
+        self.assertNotIn("PowerShell", text)
+
+    def test_start_book_archives_existing_artifacts_and_writes_new_book_state(self):
+        install_adapter_stubs()
+
+        from start_book import start_new_book
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "seed.txt").write_text("старый seed", encoding="utf-8")
+            (root / "world.md").write_text("старый world", encoding="utf-8")
+            (root / "book_config.json").write_text(json.dumps({"language": "en"}), encoding="utf-8")
+            (root / "state.json").write_text(json.dumps({"phase": "drafting", "chapters_total": 12}), encoding="utf-8")
+            (root / "results.tsv").write_text("old results", encoding="utf-8")
+            (root / "manuscript.md").write_text("old manuscript", encoding="utf-8")
+            (root / "chapters").mkdir()
+            (root / "chapters" / "ch_01.md").write_text("old chapter", encoding="utf-8")
+            (root / "edit_logs").mkdir()
+            (root / "edit_logs" / "log.json").write_text("{}", encoding="utf-8")
+            (root / "briefs").mkdir()
+            (root / "briefs" / "brief.md").write_text("brief", encoding="utf-8")
+            (root / "typeset").mkdir()
+            (root / "typeset" / "build_tex.py").write_text("print('build')", encoding="utf-8")
+            (root / "typeset" / "build_epub.py").write_text("print('build')", encoding="utf-8")
+            (root / ".env").write_text("KEEP=1", encoding="utf-8")
+
+            result = start_new_book(
+                {
+                    "premise_hint": "островная маячная история",
+                    "genre": "literary mystery",
+                    "audience": "adult readers",
+                    "tone": "quiet and exact",
+                    "selected_seed": "Смотрительница маяка на шотландском острове скрывает чужую смерть.",
+                    "world_direction": "остров живет по собственным приливам и слухам",
+                    "character_direction": "героиня стареет, но не отступает от долга",
+                    "outline_direction": "от бытового распорядка к раскрытию тайны острова",
+                },
+                project_root=root,
+                archive_existing=True,
+                run_foundation=False,
+            )
+
+            archive_root = root / "archive"
+            archives = list(archive_root.iterdir())
+            self.assertEqual(len(archives), 1)
+            archived = archives[0]
+            self.assertTrue((archived / "seed.txt").exists())
+            self.assertTrue((archived / "world.md").exists())
+            self.assertTrue((archived / "chapters" / "ch_01.md").exists())
+            self.assertTrue((archived / "edit_logs" / "log.json").exists())
+            self.assertTrue((archived / "briefs" / "brief.md").exists())
+            self.assertTrue((archived / "archive_manifest.json").exists())
+            self.assertTrue((root / ".env").exists())
+            self.assertTrue((root / "typeset" / "build_tex.py").exists())
+            self.assertTrue((root / "typeset" / "build_epub.py").exists())
+            self.assertTrue((root / "seed.txt").exists())
+            self.assertTrue((root / "book_config.json").exists())
+            self.assertTrue((root / "state.json").exists())
+
+            config = json.loads((root / "book_config.json").read_text(encoding="utf-8"))
+            state = json.loads((root / "state.json").read_text(encoding="utf-8"))
+            self.assertEqual(config["language"], "ru")
+            self.assertFalse(config["interactive_foundation"])
+            self.assertEqual(state["phase"], "foundation")
+            self.assertEqual(state["current_focus"], "planning")
+            self.assertEqual(state["chapters_total"], 0)
+            self.assertIn("Смотрительница маяка", (root / "seed.txt").read_text(encoding="utf-8"))
+            self.assertIn("archive", result["archive_dir"].as_posix())
+
+    def test_start_book_rejects_incomplete_intake_without_writing_partial_files(self):
+        install_adapter_stubs()
+
+        from start_book import start_new_book
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            with self.assertRaisesRegex(ValueError, "missing required intake fields"):
+                start_new_book(
+                    {
+                        "premise_hint": "only one field",
+                    },
+                    project_root=root,
+                    archive_existing=True,
+                    run_foundation=False,
+                )
+
+            self.assertFalse((root / "seed.txt").exists())
+            self.assertFalse((root / "book_config.json").exists())
+            self.assertFalse((root / "state.json").exists())
+            self.assertFalse((root / "archive").exists())
+
+    def test_start_book_can_read_intake_from_stdin(self):
+        install_adapter_stubs()
+
+        from start_book import read_intake
+
+        previous_stdin = sys.stdin
+        try:
+            sys.stdin = StringIO(json.dumps({"premise_hint": "stdin premise"}))
+            intake = read_intake("-")
+        finally:
+            sys.stdin = previous_stdin
+
+        self.assertEqual(intake["premise_hint"], "stdin premise")
+
     def test_audit_project_reports_state_unicode_and_heading_issues(self):
         from audit_project import collect_audit, format_audit
 

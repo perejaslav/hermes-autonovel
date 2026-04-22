@@ -9,6 +9,8 @@ description: Use when operating, debugging, or extending the autonovel project w
 
 Advance the novel pipeline one verified step at a time. Prefer Hermes Agent's current selected model via `AUTONOVEL_PROVIDER=agent`, keep optional heavy outputs disabled by default, and stop on the first concrete failure.
 
+For a new book started from chat intent such as "хочу написать книгу", use `autonovel-book-start` first. This pipeline skill takes over after `start_book.py` has prepared the new run, or after the user approves drafting.
+
 ## Required Checks
 
 Before running generation or evaluation:

@@ -49,6 +49,30 @@ def save_config(config: dict, path: Path = CONFIG_FILE) -> None:
     path.write_text(json.dumps(config, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
+def apply_foundation_answers(
+    answers: dict,
+    base_config: dict | None = None,
+    path: Path | None = None,
+) -> dict:
+    """Apply chat-collected foundation answers and optionally persist them."""
+    config = base_config or default_config()
+    foundation = config.setdefault("foundation", default_config()["foundation"].copy())
+    allowed_fields = set(default_config()["foundation"].keys())
+
+    for key, value in answers.items():
+        if key in allowed_fields:
+            foundation[key] = str(value).strip()
+
+    config["language"] = config.get("language") or "ru"
+    config["language_name"] = config.get("language_name") or "Russian"
+    config["interactive_foundation"] = False
+
+    if path is not None:
+        save_config(config, path)
+
+    return config
+
+
 def build_seed_options_prompt(config: dict, premise_hint: str) -> str:
     """Build the prompt used to generate seed options for user selection."""
     foundation = config.get("foundation", {})
