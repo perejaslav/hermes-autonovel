@@ -1,4 +1,4 @@
-"""Unified MiniMax API adapter for autonovel."""
+"""Unified MiniMax/Z.AI API adapter for autonovel."""
 
 import os
 import httpx
@@ -15,12 +15,20 @@ DEFAULT_WRITER_MODEL = "auto"
 DEFAULT_JUDGE_MODEL = "auto"
 DEFAULT_REVIEW_MODEL = "auto"
 
-API_KEY = os.environ.get("MINIMAX_API_KEY", "")
-BASE_URL = (
+# Provider selection: "minimax" or "glm"
+PROVIDER = os.environ.get("AUTONOVEL_PROVIDER", "minimax")
+
+# MiniMax config
+MINIMAX_API_KEY = os.environ.get("MINIMAX_API_KEY", "")
+MINIMAX_BASE_URL = (
     os.environ.get("MINIMAX_API_BASE_URL")
     or os.environ.get("AUTONOVEL_API_BASE_URL")
     or "https://api.minimax.io/anthropic"
 ).rstrip("/")
+
+# Z.AI/GLM config
+GLM_API_KEY = os.environ.get("GLM_API_KEY", "")
+GLM_BASE_URL = os.environ.get("GLM_BASE_URL", "https://api.z.ai/api/coding/paas/v4").rstrip("/")
 
 # Model selection per role
 WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", DEFAULT_WRITER_MODEL)
@@ -28,13 +36,31 @@ JUDGE_MODEL = os.environ.get("AUTONOVEL_JUDGE_MODEL", DEFAULT_JUDGE_MODEL)
 REVIEW_MODEL = os.environ.get("AUTONOVEL_REVIEW_MODEL", DEFAULT_REVIEW_MODEL)
 
 
+def _get_provider_config() -> tuple[str, str]:
+    """Get API key and base URL for the selected provider."""
+    if PROVIDER.lower() == "glm":
+        return GLM_API_KEY, GLM_BASE_URL
+    else:  # minimax (default)
+        return MINIMAX_API_KEY, MINIMAX_BASE_URL
+
+
 def _headers() -> dict:
-    """Build request headers — MiniMax uses Bearer auth."""
-    return {
-        "Authorization": f"Bearer {API_KEY}",
+    """Build request headers — both providers use Bearer auth."""
+    api_key, _ = _get_provider_config()
+
+    if not api_key:
+        raise RuntimeError(f"API key for provider '{PROVIDER}' is not set. Add it to .env before calling the API.")
+
+    base_headers = {
+        "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
-        "anth" + "ropic-version": "2023-06-01",
     }
+
+    # MiniMax requires anthropic-version header
+    if PROVIDER.lower() == "minimax":
+        base_headers["anthropic-version"] = "2023-06-01"
+
+    return base_headers
 
 
 def resolve_model(model: str, role: str) -> str:
@@ -52,12 +78,12 @@ def call_model(
     prompt: str,
     system: str = "",
     model: str = "auto",
-    max_tokens: int = 16000,
+    max_tokens: int = 32768,
     temperature: float = 0.8,
     role: str = "writer",
 ) -> str:
     """
-    Unified model-calling function.
+    Unified model-calling function supporting both MiniMax and Z.AI/GLM.
 
     Args:
         prompt: The user message.
@@ -70,10 +96,8 @@ def call_model(
     Returns:
         The generated text from the model.
     """
-    if not API_KEY:
-        raise RuntimeError("MINIMAX_API_KEY is not set. Add it to .env before calling the API.")
-
     model = resolve_model(model, role)
+    _, base_url = _get_provider_config()
 
     messages = [{"role": "user", "content": prompt}]
     payload = {
@@ -85,17 +109,28 @@ def call_model(
     if system:
         payload["system"] = system
 
-    url = f"{BASE_URL}/v1/messages"
+    url = f"{base_url}/chat/completions"
     resp = httpx.post(url, headers=_headers(), json=payload, timeout=600)
     resp.raise_for_status()
     result = resp.json()
 
-    # MiniMax returns content as a list of blocks.
-    # Each block has type: "text" or "thinking" (MiniMax)
-    # Return the first text block
-    for block in result.get("content", []):
-        if block.get("type") == "text":
-            return block["text"]
+    # Handle response format differences between providers
+    if PROVIDER.lower() == "glm":
+        # Z.AI/GLM returns OpenAI-style format
+        # Some GLM models use "reasoning_content" instead of "content"
+        choice = result.get("choices", [{}])[0]
+        content = choice.get("message", {}).get("content", "")
+        
+        # If content is empty, check for reasoning_content
+        if not content:
+            content = choice.get("message", {}).get("reasoning_content", "")
+        
+        return content
+    else:
+        # MiniMax returns content as a list of blocks with type "text" or "thinking"
+        for block in result.get("content", []):
+            if block.get("type") == "text":
+                return block["text"]
 
     raise ValueError(f"No text block in response: {result}")
 
@@ -104,7 +139,7 @@ def call_model(
 # Convenience wrappers matching original call_* signatures
 # ---------------------------------------------------------------------------
 
-def call_writer(prompt: str, max_tokens: int = 16000, temperature: float = 0.8) -> str:
+def call_writer(prompt: str, max_tokens: int = 32768, temperature: float = 0.8) -> str:
     return call_model(prompt, model=WRITER_MODEL, max_tokens=max_tokens,
                       temperature=temperature, role="writer")
 
