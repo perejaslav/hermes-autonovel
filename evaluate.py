@@ -22,6 +22,8 @@ import re
 from datetime import datetime
 from pathlib import Path
 
+from autonovel_utils import language_instruction
+
 # --- Configuration ---
 BASE_DIR = Path(__file__).parent
 
@@ -29,7 +31,7 @@ BASE_DIR = Path(__file__).parent
 from dotenv import load_dotenv
 load_dotenv(BASE_DIR / ".env")
 
-# Judge should differ from writer when MiniMax exposes multiple suitable models.
+# Judge should differ from writer when multiple suitable models are configured.
 JUDGE_MODEL = os.environ.get("AUTONOVEL_JUDGE_MODEL", "auto")
 CHAPTERS_DIR = BASE_DIR / "chapters"
 EVAL_LOG_DIR = BASE_DIR / "eval_logs"
@@ -474,7 +476,7 @@ invent something during drafting, your score is too high. Revise down.
 
 def evaluate_foundation():
     layers = load_layer_files()
-    prompt = FOUNDATION_PROMPT.format(**layers)
+    prompt = f"LANGUAGE CONTRACT:\n{language_instruction()}\n\n" + FOUNDATION_PROMPT.format(**layers)
     raw = call_judge(prompt, max_tokens=16000)
     return parse_json_response(raw)
 
@@ -642,7 +644,7 @@ def evaluate_chapter(chapter_num):
     prev_text = load_chapter(chapter_num - 1) if chapter_num > 1 else "(first chapter)"
     prev_tail = prev_text[-3000:] if len(prev_text) > 3000 else prev_text
 
-    prompt = CHAPTER_PROMPT.format(
+    prompt = f"LANGUAGE CONTRACT:\n{language_instruction()}\n\n" + CHAPTER_PROMPT.format(
         voice=layers["voice"],
         world=layers["world"][:4000],  # truncate world bible
         characters=layers["characters"],
@@ -729,7 +731,7 @@ def evaluate_full():
             f"  Closing: ...{tail}\n"
         )
 
-    prompt = FULL_NOVEL_PROMPT.format(
+    prompt = f"LANGUAGE CONTRACT:\n{language_instruction()}\n\n" + FULL_NOVEL_PROMPT.format(
         voice=layers["voice"],
         world_summary=layers["world"][:3000],
         characters=layers["characters"],

@@ -2,7 +2,7 @@
 """
 Parse novel chapters into speaker-attributed audiobook scripts.
 
-For each chapter, uses MiniMax to:
+For each chapter, uses the configured writer model to:
   - Identify every dialogue line and its speaker
   - Tag narration as NARRATOR
   - Add [audio tags] for emotional delivery based on context
@@ -45,7 +45,7 @@ Rules:
 - [whisper] for secrets, locked-room scenes, late-night moments.
 """
 
-def call_minimax(prompt, max_tokens=16000):
+def call_writer_model(prompt, max_tokens=16000):
     from _api_adapter import call_writer as _orig
     return _orig(prompt, max_tokens=max_tokens)
 
@@ -97,7 +97,7 @@ CHAPTER {ch_num}: "{title}" ({wc} words)
 Output the JSON array only. No other text."""
 
     print(f"  Ch {ch_num}: parsing '{title}' ({wc}w)...", end="", flush=True)
-    result = call_minimax(prompt)
+    result = call_writer_model(prompt)
 
     # Extract JSON from response
     result = result.strip()

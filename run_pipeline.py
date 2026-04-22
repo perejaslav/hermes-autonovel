@@ -663,7 +663,7 @@ def run_revision(
             banner(f"Deep Review Round {rnd}/{max_review_rounds}", "-")
             
             # Step 1: Generate the review
-            step("Sending manuscript to MiniMax for review...")
+            step("Sending manuscript to the review model...")
             review_result = uv_run(
                 f"review.py --output reviews.md", timeout=900)
             
@@ -715,7 +715,7 @@ def run_revision(
                         step(f"Revising Ch {ch_num} from review brief...")
                         uv_run(f"gen_revision.py {ch_num} {brief}", timeout=600)
                         git_add_commit(
-                            f"review round {rnd}: revise ch{ch_num:02d} from MiniMax feedback")
+                            f"review round {rnd}: revise ch{ch_num:02d} from model feedback")
             
             # Step 5: Mechanical fixes from review
             # Run slop pass on any mentioned patterns
@@ -900,6 +900,14 @@ def run_pipeline(args):
     for phase in phases:
         try:
             if phase == "foundation":
+                if args.interactive:
+                    from foundation_wizard import run_wizard
+
+                    run_wizard(argparse.Namespace(
+                        config=None,
+                        premise="",
+                        generate_seeds=args.generate_seed_options,
+                    ))
                 state = run_foundation(state)
             elif phase == "drafting":
                 state = run_drafting(state)
@@ -962,7 +970,13 @@ Examples:
         help=f"Maximum revision cycles (default: {MAX_REVISION_CYCLES})")
     parser.add_argument(
         "--with-deep-review", action="store_true",
-        help="Run the expensive final MiniMax review loop during revision")
+        help="Run the expensive final model review loop during revision")
+    parser.add_argument(
+        "--interactive", action="store_true",
+        help="Run the interactive foundation wizard before the foundation phase")
+    parser.add_argument(
+        "--generate-seed-options", action="store_true",
+        help="With --interactive, generate seed options through the configured writer model")
 
     args = parser.parse_args()
     run_pipeline(args)

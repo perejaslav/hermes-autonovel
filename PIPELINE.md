@@ -109,7 +109,7 @@ INPUT:  seed.txt (user-provided or generated via seed.py)
 OUTPUT: branch created, .env configured
 
 1. git checkout -b autonovel/<tag>
-2. Verify .env has MINIMAX_API_KEY
+2. Verify `.env` has a configured model provider
 3. Verify seed.txt exists and is specific enough
    (world-differentiator, central tension, cost/constraint, sensory hook)
 ```
@@ -313,12 +313,12 @@ CYCLE 6: POLISH (final pass)
 ```
 PHASE 3b: DEEP REVIEW LOOP (deep, prose-level refinement)
 
-  After the automated cycles, run a MiniMax deep review for the final quality push.
+  After the automated cycles, run a deep model review for the final quality push.
   This is the evaluation that actually catches prose problems, structural
   repetition, character thinness, and ethical gaps.
 
   Tool: review.py
-  Model: MiniMax review model configured in AUTONOVEL_REVIEW_MODEL
+  Model: review model configured in AUTONOVEL_REVIEW_MODEL
   Prompt: "Read the below novel. Review it first as a literary critic
     (like a newspaper book review) and then as a professor of fiction.
     In the later review, give specific, actionable suggestions for any
@@ -326,7 +326,7 @@ PHASE 3b: DEEP REVIEW LOOP (deep, prose-level refinement)
 
   Loop (max 4 rounds):
     1. review.py --output reviews.md
-       Sends full manuscript to MiniMax. Gets dual-persona review.
+       Sends full manuscript to the configured review model. Gets dual-persona review.
     2. review.py --parse
        Extracts actionable items, severity, type.
        Classifies items: major/moderate/minor, qualified/unqualified.

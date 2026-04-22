@@ -1,6 +1,11 @@
-"""Unified MiniMax/Z.AI API adapter for autonovel."""
+"""Unified LLM API adapter for autonovel."""
 
+import json
 import os
+import uuid
+from datetime import datetime, timezone
+from pathlib import Path
+
 import httpx
 from dotenv import load_dotenv
 
@@ -15,20 +20,21 @@ DEFAULT_WRITER_MODEL = "auto"
 DEFAULT_JUDGE_MODEL = "auto"
 DEFAULT_REVIEW_MODEL = "auto"
 
-# Provider selection: "minimax" or "glm"
-PROVIDER = os.environ.get("AUTONOVEL_PROVIDER", "minimax")
+# Provider selection: "agent", "glm", or "openai_compatible"
+PROVIDER = os.environ.get("AUTONOVEL_PROVIDER", "agent")
 
-# MiniMax config
-MINIMAX_API_KEY = os.environ.get("MINIMAX_API_KEY", "")
-MINIMAX_BASE_URL = (
-    os.environ.get("MINIMAX_API_BASE_URL")
-    or os.environ.get("AUTONOVEL_API_BASE_URL")
-    or "https://api.minimax.io/anthropic"
-).rstrip("/")
+# Generic OpenAI-compatible model API config
+MODEL_API_KEY = os.environ.get("MODEL_API_KEY", "")
+MODEL_API_BASE_URL = os.environ.get("MODEL_API_BASE_URL", "").rstrip("/")
+MODEL_API_HEADERS = os.environ.get("MODEL_API_HEADERS", "")
 
 # Z.AI/GLM config
 GLM_API_KEY = os.environ.get("GLM_API_KEY", "")
 GLM_BASE_URL = os.environ.get("GLM_BASE_URL", "https://api.z.ai/api/coding/paas/v4").rstrip("/")
+
+# Hermes Agent request/response config
+AGENT_REQUEST_DIR = os.environ.get("AUTONOVEL_AGENT_REQUEST_DIR", ".autonovel/agent_requests")
+AGENT_RESPONSE_FILE = os.environ.get("AUTONOVEL_AGENT_RESPONSE_FILE", "")
 
 # Model selection per role
 WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", DEFAULT_WRITER_MODEL)
@@ -38,15 +44,22 @@ REVIEW_MODEL = os.environ.get("AUTONOVEL_REVIEW_MODEL", DEFAULT_REVIEW_MODEL)
 
 def _get_provider_config() -> tuple[str, str]:
     """Get API key and base URL for the selected provider."""
-    if PROVIDER.lower() == "glm":
+    provider = PROVIDER.lower()
+    if provider == "agent":
+        return "", ""
+    if provider == "glm":
         return GLM_API_KEY, GLM_BASE_URL
-    else:  # minimax (default)
-        return MINIMAX_API_KEY, MINIMAX_BASE_URL
+    if provider == "openai_compatible":
+        return MODEL_API_KEY, MODEL_API_BASE_URL
+    raise RuntimeError(f"Unknown provider '{PROVIDER}'. Use agent, glm, or openai_compatible.")
 
 
 def _headers() -> dict:
     """Build request headers — both providers use Bearer auth."""
     api_key, _ = _get_provider_config()
+
+    if PROVIDER.lower() == "agent":
+        return {"Content-Type": "application/json"}
 
     if not api_key:
         raise RuntimeError(f"API key for provider '{PROVIDER}' is not set. Add it to .env before calling the API.")
@@ -56,15 +69,20 @@ def _headers() -> dict:
         "Content-Type": "application/json",
     }
 
-    # MiniMax requires anthropic-version header
-    if PROVIDER.lower() == "minimax":
-        base_headers["anthropic-version"] = "2023-06-01"
+    if MODEL_API_HEADERS:
+        try:
+            extra_headers = json.loads(MODEL_API_HEADERS)
+        except json.JSONDecodeError as exc:
+            raise RuntimeError("MODEL_API_HEADERS must be valid JSON object text.") from exc
+        if not isinstance(extra_headers, dict):
+            raise RuntimeError("MODEL_API_HEADERS must decode to a JSON object.")
+        base_headers.update({str(k): str(v) for k, v in extra_headers.items()})
 
     return base_headers
 
 
 def resolve_model(model: str, role: str) -> str:
-    """Resolve the requested model for a MiniMax request."""
+    """Resolve the requested model for a model request."""
     if model != "auto":
         return model
     if role == "judge":
@@ -72,6 +90,55 @@ def resolve_model(model: str, role: str) -> str:
     if role == "review":
         return REVIEW_MODEL
     return WRITER_MODEL
+
+
+def _read_agent_response(path: Path) -> str:
+    """Read a Hermes Agent response file."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if isinstance(data, str):
+        return data
+    content = data.get("content", "")
+    if not isinstance(content, str) or not content.strip():
+        raise RuntimeError(f"Hermes Agent response file has no text content: {path}")
+    return content
+
+
+def _call_agent(
+    prompt: str,
+    system: str,
+    model: str,
+    max_tokens: int,
+    temperature: float,
+    role: str,
+) -> str:
+    """Create a request for Hermes Agent or read a supplied response file."""
+    if AGENT_RESPONSE_FILE:
+        return _read_agent_response(Path(AGENT_RESPONSE_FILE))
+
+    request_dir = Path(AGENT_REQUEST_DIR)
+    request_dir.mkdir(parents=True, exist_ok=True)
+    request_id = f"{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}-{uuid.uuid4().hex[:8]}"
+    response_path = request_dir / f"{request_id}.response.json"
+    request_path = request_dir / f"{request_id}.request.json"
+    payload = {
+        "id": request_id,
+        "provider": "agent",
+        "role": role,
+        "model": model,
+        "system": system,
+        "prompt": prompt,
+        "max_tokens": max_tokens,
+        "temperature": temperature,
+        "response_path": str(response_path),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    request_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    raise RuntimeError(
+        "Hermes Agent response required. "
+        f"Review request file {request_path} with the current Hermes model, "
+        f"write JSON {{\"content\": \"...\"}} to {response_path}, then rerun with "
+        f"AUTONOVEL_AGENT_RESPONSE_FILE={response_path}."
+    )
 
 
 def call_model(
@@ -83,7 +150,8 @@ def call_model(
     role: str = "writer",
 ) -> str:
     """
-    Unified model-calling function supporting both MiniMax and Z.AI/GLM.
+    Unified model-calling function supporting Hermes Agent request files,
+    Z.AI/GLM, and OpenAI-compatible APIs.
 
     Args:
         prompt: The user message.
@@ -97,7 +165,12 @@ def call_model(
         The generated text from the model.
     """
     model = resolve_model(model, role)
+    if PROVIDER.lower() == "agent":
+        return _call_agent(prompt, system, model, max_tokens, temperature, role)
+
     _, base_url = _get_provider_config()
+    if not base_url:
+        raise RuntimeError(f"Base URL for provider '{PROVIDER}' is not set.")
 
     messages = [{"role": "user", "content": prompt}]
     payload = {
@@ -115,8 +188,8 @@ def call_model(
     result = resp.json()
 
     # Handle response format differences between providers
-    if PROVIDER.lower() == "glm":
-        # Z.AI/GLM returns OpenAI-style format
+    if PROVIDER.lower() in {"glm", "openai_compatible"}:
+        # Z.AI/GLM and OpenAI-compatible providers return OpenAI-style format
         # Some GLM models use "reasoning_content" instead of "content"
         choice = result.get("choices", [{}])[0]
         content = choice.get("message", {}).get("content", "")
@@ -126,12 +199,6 @@ def call_model(
             content = choice.get("message", {}).get("reasoning_content", "")
         
         return content
-    else:
-        # MiniMax returns content as a list of blocks with type "text" or "thinking"
-        for block in result.get("content", []):
-            if block.get("type") == "text":
-                return block["text"]
-
     raise ValueError(f"No text block in response: {result}")
 
 

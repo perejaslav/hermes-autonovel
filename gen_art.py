@@ -46,7 +46,6 @@ STYLE_FILE = ART_DIR / "visual_style.json"
 PICKS_FILE = ART_DIR / "picks.json"
 
 WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "auto")
-MINIMAX_KEY = os.environ.get("MINIMAX_API_KEY", "")
 
 # ============================================================
 # API HELPERS
@@ -107,7 +106,7 @@ def download_image(url, dest_path):
     dest_path.write_bytes(resp.content)
     return len(resp.content)
 
-def call_minimax(prompt, max_tokens=16000):
+def call_writer_model(prompt, max_tokens=16000):
     from _api_adapter import call_writer as _orig
     return _orig(prompt, max_tokens=max_tokens)
 
@@ -171,7 +170,7 @@ Define a VISUAL STYLE for all art in this novel. Output valid JSON:
 JSON only."""
 
     print("Deriving visual style from world + voice...")
-    result = call_minimax(prompt)
+    result = call_writer_model(prompt)
     text = result.strip()
     if text.startswith("```"):
         text = re.sub(r'^```\w*\n?', '', text)
@@ -197,7 +196,7 @@ def cmd_curate(args):
 
     VARIANTS_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Step 1: Generate fundamentally different art directions via MiniMax
+    # Step 1: Generate fundamentally different art directions via the writer model
     from gen_art_directions import generate_directions
 
     world = ""

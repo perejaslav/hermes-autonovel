@@ -14,6 +14,7 @@ import os
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
+from autonovel_utils import language_instruction
 
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env")
@@ -93,16 +94,13 @@ def main():
                         help="Riff on an existing idea")
     args = parser.parse_args()
 
-    if not os.environ.get("MINIMAX_API_KEY", ""):
-        print("ERROR: Set MINIMAX_API_KEY in .env first")
-        sys.exit(1)
-
     if args.riff:
         print(f"Riffing on: {args.riff}\n")
         prompt = RIFF_PROMPT.format(idea=args.riff)
     else:
         print(f"Generating {args.count} seed concepts...\n")
         prompt = GENERATE_PROMPT.format(count=args.count)
+    prompt = f"LANGUAGE CONTRACT:\n{language_instruction()}\n\n{prompt}"
 
     result = call_writer(prompt, max_tokens=8000)
     print(result)
